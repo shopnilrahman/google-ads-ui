@@ -1,12 +1,77 @@
 export type RelevanceScore = "green" | "yellow" | "red"
 
+export type MatchType = "Broad" | "Phrase" | "Exact"
+
+export type TermStatus = "active" | "excluded" | "tightened" | "flagged"
+
+export const statusMeta: Record<
+  TermStatus,
+  { label: string; description: string }
+> = {
+  active: { label: "Active", description: "This query can trigger your ads." },
+  excluded: {
+    label: "Excluded",
+    description: "Added as a negative keyword. It will no longer trigger ads.",
+  },
+  tightened: {
+    label: "Match tightened",
+    description: "Match type narrowed to reduce loose AI matches.",
+  },
+  flagged: {
+    label: "Flagged for retraining",
+    description: "Sent to the model as a mismatched example.",
+  },
+}
+
+// How the relevance score is calculated — surfaced in the explainer dialog.
+export const scoringFactors: {
+  name: string
+  weight: number
+  description: string
+}[] = [
+  {
+    name: "Keyword overlap",
+    weight: 35,
+    description:
+      "How directly the query text matches your keyword and its close variants.",
+  },
+  {
+    name: "Commercial intent",
+    weight: 30,
+    description:
+      "Signals that the searcher intends to buy rather than research or troubleshoot.",
+  },
+  {
+    name: "Historical conversions",
+    weight: 20,
+    description:
+      "Whether similar queries have converted for advertisers in your category.",
+  },
+  {
+    name: "Semantic distance",
+    weight: 15,
+    description:
+      "How far the AI stretched from your original intent to make the match.",
+  },
+]
+
+export const scoreBands: Record<
+  RelevanceScore,
+  { range: string; label: string }
+> = {
+  green: { range: "80–100", label: "Tight match" },
+  yellow: { range: "45–79", label: "AI stretched" },
+  red: { range: "0–44", label: "Beyond intent" },
+}
+
 export type SearchTerm = {
   id: string
   query: string
   score: RelevanceScore
+  relevanceScore: number
   matchReason: string
   matchedKeyword: string
-  matchType: "Broad" | "Phrase" | "Exact"
+  matchType: MatchType
   conversionRate: number
   clickQuality: number
   clicks: number
@@ -41,6 +106,7 @@ export const searchTerms: SearchTerm[] = [
     id: "1",
     query: "wireless noise cancelling headphones",
     score: "green",
+    relevanceScore: 94,
     matchReason: "Direct match to your keyword with matching purchase intent.",
     matchedKeyword: "noise cancelling headphones",
     matchType: "Phrase",
@@ -58,6 +124,7 @@ export const searchTerms: SearchTerm[] = [
     id: "2",
     query: "best headphones for working from home",
     score: "yellow",
+    relevanceScore: 62,
     matchReason: "AI inferred relevance from use-case and category overlap.",
     matchedKeyword: "noise cancelling headphones",
     matchType: "Broad",
@@ -75,6 +142,7 @@ export const searchTerms: SearchTerm[] = [
     id: "3",
     query: "how to fix airpods not connecting",
     score: "red",
+    relevanceScore: 24,
     matchReason: "AI matched on brand adjacency, not purchase intent.",
     matchedKeyword: "wireless earbuds",
     matchType: "Broad",
@@ -92,6 +160,7 @@ export const searchTerms: SearchTerm[] = [
     id: "4",
     query: "sony wh-1000xm5",
     score: "green",
+    relevanceScore: 97,
     matchReason: "Model-specific query matching a product you sell.",
     matchedKeyword: "sony headphones",
     matchType: "Exact",
@@ -109,6 +178,7 @@ export const searchTerms: SearchTerm[] = [
     id: "5",
     query: "gym earbuds that stay in",
     score: "yellow",
+    relevanceScore: 58,
     matchReason: "AI matched on a product attribute you advertise.",
     matchedKeyword: "wireless earbuds",
     matchType: "Broad",
@@ -126,6 +196,7 @@ export const searchTerms: SearchTerm[] = [
     id: "6",
     query: "are expensive headphones worth it",
     score: "red",
+    relevanceScore: 33,
     matchReason: "Research-stage query with weak commercial signals.",
     matchedKeyword: "premium headphones",
     matchType: "Broad",
@@ -143,6 +214,7 @@ export const searchTerms: SearchTerm[] = [
     id: "7",
     query: "bluetooth headphones with mic",
     score: "green",
+    relevanceScore: 89,
     matchReason: "Feature-complete query matching your product specs.",
     matchedKeyword: "bluetooth headphones",
     matchType: "Phrase",
@@ -160,6 +232,7 @@ export const searchTerms: SearchTerm[] = [
     id: "8",
     query: "headphone stand wooden",
     score: "red",
+    relevanceScore: 16,
     matchReason: "AI matched on category, but it's an accessory query.",
     matchedKeyword: "headphones",
     matchType: "Broad",
